@@ -1,7 +1,15 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,           // Vue ecosystem recommends
+    "baseUrl": ".",
+    "paths": {                      // ★ add this block
+      "@/*": ["src/*"]
+    },
+    "types": ["vite/client"]        // keep Vite globals
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts"]
 }

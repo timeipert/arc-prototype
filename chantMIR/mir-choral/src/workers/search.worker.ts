@@ -6,9 +6,10 @@ import type {
 } from '@/models';
 
 /*────────── in-worker corpus cache ──────────*/
-let corpus: ChantDoc[] | null = null;
+let corpus: ChantDoc[] = [];                 // initialise as empty array
+
 const loadCorpus = async (): Promise<ChantDoc[]> => {
-  if (corpus) return corpus;
+  if (corpus.length) return corpus;
   corpus = await fetch('/data/chants.json').then(r => r.json());
   return corpus;
 };
