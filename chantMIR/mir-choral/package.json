@@ -6,7 +6,7 @@
   "scripts": {
     "prep:data": "npx tsx  tools/build-data.ts  public/dataset.csv  public/data",
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
