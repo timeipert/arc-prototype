@@ -19,28 +19,47 @@ const counterpart = (uuid: string) => {
 };
 
 /* NEW: build arrays, not HTML strings */
-function buildArrays(doc: ChantDoc | undefined, h: Occurrence) {
-  if (!doc) return { volp: [], text: [], hitMap: [] };
+/* ---- helper: build arrays, no HTML ---------------------- */
+function buildArrays(
+    doc: ChantDoc | undefined,
+    h: Occurrence,
+    highlightVolp: boolean   // true = mark pattern chars
+) {
+  if (!doc) return { volp: [], text: [], hitMap: [], charMap: [] };
 
   const ctx = store.context;
   const s   = doc.syllables;
   const L   = Math.max(0, h.start - ctx);
   const R   = Math.min(s.length, h.end + ctx);
-  const hitF = h.start - L;
-  const hitL = h.end   - 1 - L;
 
-  const volp   : string[]  = [];
-  const text   : string[]  = [];
-  const hitMap : boolean[] = [];
+  const volp: string[] = [];
+  const text: string[] = [];
+  const hitMap: boolean[] = [];
+  const charMap: (null | [number, number])[] = [];
 
   for (let i = L; i < R; i++) {
-    volp.push(s[i].volpiano);
-    text.push(s[i].text);
-    hitMap.push(i >= h.start && i < h.end);
-  }
-  return { volp, text, hitMap };
-}
+    const inHit = i >= h.start && i < h.end;
+    const syl   = s[i];
 
+    volp.push(syl.volpiano);
+    text.push(syl.text);
+    hitMap.push(inHit);               // text always red when inHit
+
+    if (!inHit || !highlightVolp) {
+      charMap.push(null);
+    } else if (h.start === i && h.end - 1 === i) {
+      // hit completely inside ONE syllable
+      charMap.push([h.startChar, h.endChar]);
+    } else if (h.start === i) {
+      charMap.push([h.startChar, syl.volpiano.length - 1]);
+    } else if (h.end - 1 === i) {
+      charMap.push([0, h.endChar]);
+    } else {
+      charMap.push([0, syl.volpiano.length - 1]);
+    }
+  }
+  return { volp, text, hitMap, charMap };
+}
 
 /* emit select */
 const emit = defineEmits<{ select:[h:Occurrence] }>();
@@ -71,7 +90,9 @@ const emit = defineEmits<{ select:[h:Occurrence] }>();
       <!-- FROM snippet -->
       <td class="border p-0">
         <div class="clip">
-          <VolpianoSnippet v-bind="buildArrays(chants[h.uuid], h)" />
+          <VolpianoSnippet v-bind="buildArrays(chants[h.uuid], h, true)" />
+
+
         </div>
       </td>
 
@@ -79,7 +100,9 @@ const emit = defineEmits<{ select:[h:Occurrence] }>();
       <td class="border p-0" v-if="store.isCompare">
         <div class="clip">
           <template v-if="counterpart(h.uuid)">
-            <VolpianoSnippet v-bind="buildArrays(counterpart(h.uuid)!, h)" />
+            <VolpianoSnippet
+                v-if="counterpart(h.uuid)"
+                v-bind="buildArrays(counterpart(h.uuid)!, h, false)" />
           </template>
           <span v-else class="italic text-gray-500">—</span>
         </div>

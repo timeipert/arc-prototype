@@ -35,10 +35,10 @@ const chantB = computed(() => {
 
     <ResultTable @select="onSelect" />
 
-    <DualViewer v-if="selected && byUuid[selected.uuid]"
+    <!--<DualViewer v-if="selected && byUuid[selected.uuid]"
                 :hit="selected"
                 :chantA="byUuid[selected.uuid]"
                 :chantB="chantB"
-                :ctx="store.context" />
+                :ctx="store.context" />-->
   </main>
 </template>
