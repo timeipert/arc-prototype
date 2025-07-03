@@ -2,8 +2,12 @@ import type { ChantDoc } from '@/models';
 
 // ---------- config -------------------------------------------------
 
-const CHANTS_URL = '/data/chants.json';        // or '/data/chants.json.zst'
+/* -------- helper to build a URL that respects <base> -------- */
+const resolve = (p: string) =>
+    new URL(p, import.meta.env.BASE_URL).toString();
 
+/* use it for every file you fetch */
+const CHANTS_URL   = resolve('data/chants.json');
 
 const IS_ZSTD = false;
 
