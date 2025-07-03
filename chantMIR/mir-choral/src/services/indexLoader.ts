@@ -4,11 +4,9 @@ import type { ChantDoc } from '@/models';
 // ---------- config -------------------------------------------------
 
 /* -------- helper to build a URL that respects <base> -------- */
-const base = import.meta.env.BASE_URL;          // '/'   (dev)
-                                                // '/arc-prototype/' (prod)
+const base = import.meta.env.BASE_URL;          // "/" (dev) or "/arc-prototype/" (build)
 
-export const CHANTS_URL = `${base}data/chants.json`;
-
+export const CHANTS_URL   = `${base}data/chants.json`;
 console.log(CHANTS_URL)
 
 const IS_ZSTD = false;

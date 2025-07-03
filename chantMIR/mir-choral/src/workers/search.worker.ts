@@ -7,10 +7,11 @@ import type {
 
 /*────────── in-worker corpus cache ──────────*/
 let corpus: ChantDoc[] = [];                 // initialise as empty array
+const CHANTS_URL = `${import.meta.env.BASE_URL}data/chants.json`;
 
 const loadCorpus = async (): Promise<ChantDoc[]> => {
   if (corpus.length) return corpus;
-  corpus = await fetch('/data/chants.json').then(r => r.json());
+  corpus = await fetch(CHANTS_URL).then(r => r.json());
   return corpus;
 };
 
