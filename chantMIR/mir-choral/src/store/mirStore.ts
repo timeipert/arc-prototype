@@ -1,35 +1,45 @@
-import {defineStore} from 'pinia';
+import { defineStore } from 'pinia';
 import SearchWorker from '@/workers/search.worker?worker';
-import type {QueryPayload, QueryResponse, Occurrence} from '@/models';
+import type { Occurrence, QueryPayload, QueryResponse } from '@/models';
 
 export const useMirStore = defineStore('mir', {
     state: () => ({
-        pattern: '' as string,
-        context: 3,
-        hits: [] as Occurrence[],
-        running: false,
-        elapsed: 0
+        /* user inputs */
+        pattern : '',
+        context : 3,
+        msFrom  : '',        // filled by ControlPanel
+        msTo    : '',
+        mode    : 'occ' as 'occ' | 'cmp',
+
+        /* result data */
+        hits    : [] as Occurrence[],
+        running : false,
+        elapsed : 0
     }),
+
     getters: {
-        ctxHits: (s) => s.hits.map(h => ({...h, ctx: s.context}))
+        isCompare: (s) => s.mode === 'cmp'
     },
 
     actions: {
         search() {
-            if (!this.pattern.trim()) return;
+            /* basic validation */
+            if (!this.pattern.trim() || !this.msFrom.trim()) return;
+
             this.running = true;
             const w = new SearchWorker();
-            const payload: QueryPayload = {pattern: this.pattern};
-            const t0 = performance.now();
-
-            w.onmessage = (e: MessageEvent<QueryResponse>) => {
-                this.hits = e.data.hits;
-                this.elapsed = e.data.elapsedMs ?? Math.round(performance.now() - t0);
-                this.running = false;
-                w.terminate();
+            const payload: QueryPayload = {
+                pattern: this.pattern,
+                msFrom : this.msFrom.trim()
             };
 
             w.postMessage(payload);
+            w.onmessage = (e: MessageEvent<QueryResponse>) => {
+                this.hits    = e.data.hits;
+                this.elapsed = e.data.elapsedMs;
+                this.running = false;
+                w.terminate();
+            };
         }
     }
 });

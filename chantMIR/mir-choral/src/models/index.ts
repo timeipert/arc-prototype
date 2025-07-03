@@ -46,8 +46,8 @@ export interface Occurrence {
  * Extend as needed (regex flag, fuzzy tolerance, etc.).
  */
 export interface QueryPayload {
-  pattern: string;        // raw Volpiano (user input, "--" allowed)
-  ms?: string;            // optional filter for one manuscript
+  pattern: string;
+  msFrom : string;
 }
 
 /**
@@ -57,6 +57,9 @@ export interface QueryResponse {
   hits: Occurrence[];
   elapsedMs: number;      // perf diagnostic
 }
+
+
+
 
 /* ------- Helper type aliases ---------------------------------- */
 

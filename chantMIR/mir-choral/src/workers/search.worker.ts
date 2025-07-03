@@ -1,85 +1,95 @@
-/* -----------------------------------------------------------
-   src/workers/search.worker.ts  (pattern may cross syllables)
- ----------------------------------------------------------- */
-
 import type {
-  ChantDoc, QueryPayload, QueryResponse, Occurrence
+  ChantDoc,
+  QueryPayload,
+  QueryResponse,
+  Occurrence
 } from '@/models';
 
-/*── in-worker cache ────────────────────────────────*/
-let chants: ChantDoc[] | null = null;
-const loadChants = async () => {
-  if (chants) return chants;
-  const res = await fetch('/data/chants.json');
-  chants = (await res.json()) as ChantDoc[];
-  return chants;
+/*────────── in-worker corpus cache ──────────*/
+let corpus: ChantDoc[] | null = null;
+const loadCorpus = async (): Promise<ChantDoc[]> => {
+  if (corpus) return corpus;
+  corpus = await fetch('/data/chants.json').then(r => r.json());
+  return corpus;
 };
 
-/*── helpers ────────────────────────────────────────*/
+/*────────── helpers ──────────*/
+const norm = (s: string) => s.trim().toLowerCase();               // same rule everywhere
 const cleanPattern = (p: string) => p.replace(/\s+/g, '').toLowerCase();
+
 const findAll = (hay: string, needle: string) => {
-  const idxs: number[] = []; let pos = hay.indexOf(needle);
-  while (pos !== -1) { idxs.push(pos); pos = hay.indexOf(needle, pos + 1); }
-  return idxs;
+  const out: number[] = [];
+  for (let pos = hay.indexOf(needle); pos !== -1; pos = hay.indexOf(needle, pos + 1))
+    out.push(pos);
+  return out;
 };
 
-/* offset→syllable + syllable→startOffset */
-function buildMaps(doc: ChantDoc) {
+/* offset ↔ syllable maps */
+const buildMaps = (doc: ChantDoc) => {
   const ofs2Syl: number[] = [];
   const syl2Start: number[] = [];
   let ofs = 0;
-  doc.syllables.forEach((s, i) => {
+  doc.syllables.forEach((syl, i) => {
     syl2Start[i] = ofs;
-    for (let k = 0; k < s.volpiano.length; k++) ofs2Syl[ofs + k] = i;
-    ofs += s.volpiano.length + 2;       // +2 for “--”
+    for (let k = 0; k < syl.volpiano.length; k++) ofs2Syl[ofs + k] = i;
+    ofs += syl.volpiano.length + 2;      // “--”
   });
   return { ofs2Syl, syl2Start };
-}
+};
 
-/* remove “--” but keep back-map */
-function deDelimit(doc: ChantDoc) {
+/* strip “--” but keep back-map */
+const deDelimit = (doc: ChantDoc) => {
   const raw = doc.syllables.map(s => s.volpiano).join('--').toLowerCase();
-  const map: number[] = []; let clean = '';
+  const map: number[] = [];   // cleanIdx → rawIdx
+  let clean = '';
   for (let i = 0, j = 0; i < raw.length; i++) {
     if (raw[i] === '-' && raw[i + 1] === '-') { i++; continue; }
-    map[j++] = i; clean += raw[i];
+    map[j++] = i;
+    clean += raw[i];
   }
   return { clean, map };
-}
+};
 
-/*── message handler ────────────────────────────────*/
+/*────────── main message handler ──────────*/
 self.onmessage = async (e: MessageEvent<QueryPayload>) => {
-  const { pattern, ms } = e.data;
-  if (!pattern?.trim()) return postMessage(<QueryResponse>{ hits: [], elapsedMs: 0 });
+  const { pattern, msFrom } = e.data;
 
-  const patt = cleanPattern(pattern);
-  const docs = await loadChants();
+  /* guard clauses */
+  if (!pattern?.trim() || !msFrom?.trim()) {
+    postMessage(<QueryResponse>{ hits: [], elapsedMs: 0 });
+    return;
+  }
+
+  const msKey   = norm(msFrom);                // normalised filter key
+  const patt    = cleanPattern(pattern);
+  const docs    = await loadCorpus();
   const hits: Occurrence[] = [];
-  const t0 = performance.now();
+  const t0      = performance.now();
 
   for (const doc of docs) {
-    if (ms && doc.ms !== ms) continue;
+    if (norm(doc.ms) !== msKey) continue;      // STRICT filter
+
     const { clean: flat, map } = deDelimit(doc);
-    const posList = findAll(flat, patt);
-    if (!posList.length) continue;
+    const positions = findAll(flat, patt);
+    if (!positions.length) continue;
 
     const { ofs2Syl, syl2Start } = buildMaps(doc);
 
-    for (const p0 of posList) {
-      const p1 = p0 + patt.length - 1;          // inclusive
-      const byteStart = map[p0];
-      const byteEnd   = map[p1];
+    for (const p0 of positions) {
+      const p1 = p0 + patt.length - 1;         // inclusive
+      const rawStart = map[p0];
+      const rawEnd   = map[p1];
 
-      const sSyl = ofs2Syl[byteStart];
-      const eSyl = ofs2Syl[byteEnd];
+      const sSyl = ofs2Syl[rawStart];
+      const eSyl = ofs2Syl[rawEnd];
 
       hits.push({
         ms: doc.ms,
         uuid: doc.uuid,
         start: sSyl,
-        end: eSyl + 1,
-        startChar: byteStart - syl2Start[sSyl],
-        endChar:   byteEnd   - syl2Start[eSyl]
+        end:   eSyl + 1,                       // exclusive
+        startChar: rawStart - syl2Start[sSyl],
+        endChar:   rawEnd   - syl2Start[eSyl]
       });
     }
   }
