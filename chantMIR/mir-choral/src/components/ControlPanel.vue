@@ -4,51 +4,97 @@ import { useMirStore } from '@/store/mirStore';
 import { loadChants } from '@/services/indexLoader';
 
 const s = useMirStore();
-const mans = ref<string[]>([]);
-onMounted(async () =>
-    mans.value = [...new Set((await loadChants()).map(c => c.ms))].sort()
-);
+const manuscripts = ref<string[]>([]);
+
+onMounted(async () => {
+  const unique = new Set((await loadChants()).map(c => c.ms));
+  manuscripts.value = [...unique].sort();
+});
 
 const showToSelector = computed(() => s.mode === 'cmp');
 </script>
 
 <template>
-  <form @submit.prevent="s.search" class="flex flex-wrap gap-3 items-center">
-    <!-- Mode selector -->
-    <select v-model="s.mode" class="border rounded px-2 py-1">
-      <option value="occ">Occurrences only</option>
-      <option value="cmp">Compare with …</option>
-    </select>
-
-    <!-- From MS -->
-    <select v-model="s.msFrom" class="border rounded px-2 py-1">
-      <option v-for="m in mans" :key="m">{{ m }}</option>
-    </select>
-
-    <!-- To MS – visible only in compare mode -->
-    <template v-if="showToSelector">
-      →
-      <select v-model="s.msTo" class="border rounded px-2 py-1">
-        <option v-for="m in mans" :key="m">{{ m }}</option>
+  <form
+      @submit.prevent="s.search"
+      class="flex flex-wrap gap-3 items-end bg-white/60 border border-gray-300/80 rounded-lg p-3 shadow-sm backdrop-blur"
+  >
+    <!-- MODE --><div class="firstinputs">
+    <div class="flex flex-col">
+      <label class="label">Mode</label>
+      <select v-model="s.mode" class="select">
+        <option value="cmp">Compare</option>
+        <option value="occ">Occurrences</option>
       </select>
-    </template>
+    </div>
 
-    <!-- Pattern -->
-    <input v-model="s.pattern"
-           placeholder="Volpiano pattern"
-           class="flex-1 border rounded px-3 py-2" />
+    <!-- FROM -->
+    <div class="flex flex-col">
+      <label class="label">Manuscript #1</label>
+      <select v-model="s.msFrom" class="select w-44">
+        <option disabled value="">Select…</option>
+        <option v-for="m in manuscripts" :key="m">{{ m }}</option>
+      </select>
+    </div>
 
-    <!-- Submit -->
-    <button class="bg-blue-600 text-white px-4 py-2 rounded">
+    <!-- TO (conditional) -->
+    <div v-if="showToSelector" class="flex flex-col">
+      <label class="label">Manuscript #2</label>
+      <select v-model="s.msTo" class="select w-44">
+        <option disabled value="">Select…</option>
+        <option v-for="m in manuscripts" :key="m">{{ m }}</option>
+      </select>
+    </div></div>
+
+    <!-- PATTERN -->
+    <div class="flex-1 flex flex-col min-w-[10rem]">
+      <label class="label">Pattern (Volpiano)</label>
+      <input
+          v-model="s.pattern"
+          placeholder="efg--fed"
+          class="input volpiano"
+      />
+    </div>
+    <!-- BUTTON -->
+    <button
+        type="submit"
+        class="h-10 px-6 rounded-md bg-gray-800 text-gray-100 hover:bg-gray-700 disabled:opacity-50"
+        :disabled="s.running || !s.msFrom || !s.pattern"
+    >
       {{ s.running ? 'Searching…' : 'Search' }}
     </button>
   </form>
 </template>
 
-<style>
-input {
-  background: white;
-  border: 1px solid grey;
-  color: black;
+<style scoped>
+
+form {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.select, .input {
+  border: 1px #ccc;
+background: white;
+  font-size: 1em;
+  margin: 0.6em 0.3em;
+color: black;}
+
+.label {
+  font-size: 0.8em;
+  margin-right: 0.5em;
+}
+input.volpiano {
+  width: 200px;
+  font-size: 3em;
+}
+button {
+  height: 3em;
+}
+
+.firstinputs {
+  display: flex;
+  flex-direction: column;
+  margin: 0 2em;
 }
 </style>

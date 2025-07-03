@@ -48,8 +48,15 @@ const emit = defineEmits<{ select:[h:Occurrence] }>();
 
 <template>
   <!-- meta paragraph unchanged -->
-  <table v-if="!store.running" class="w-full text-sm border-collapse table-fixed">
-    <!-- thead unchanged -->
+  <div class="line"></div>
+  <table v-if="!store.running" class="w-full text-sm border-collapse table-fixed results">
+    <thead>
+    <tr><th>Initial Text</th>
+      <th>Syllable Position</th>
+      <th>Manuscript #1</th>
+      <th>Manuscript #2</th>
+    </tr>
+    </thead>
     <tbody>
     <tr v-for="h in store.hits"
         :key="h.ms + h.uuid + h.start"
@@ -57,7 +64,7 @@ const emit = defineEmits<{ select:[h:Occurrence] }>();
         @click="emit('select', h)">
 
       <!-- meta columns -->
-      <td class="border p-1 truncate">{{ h.ms }}</td>
+
       <td class="border p-1 truncate">{{ chants[h.uuid]?.incipit }}</td>
       <td class="border p-1 text-right">{{ h.start }}–{{ h.end-1 }}</td>
 
@@ -81,3 +88,20 @@ const emit = defineEmits<{ select:[h:Occurrence] }>();
     </tbody>
   </table>
 </template>
+<style scoped>
+table.results {
+  margin-top: 3em;
+}
+table.results td {
+  padding: 0 3em;
+}
+table.results th {
+  font-size: 0.8em;
+  font-weight: bold;
+}
+.line {
+  width: 100%;
+  border-top: 1px solid #ccc;
+  margin-top: 1em;
+}
+</style>

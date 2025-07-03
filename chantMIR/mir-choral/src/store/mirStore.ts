@@ -6,10 +6,10 @@ export const useMirStore = defineStore('mir', {
     state: () => ({
         /* user inputs */
         pattern : '',
-        context : 3,
-        msFrom  : '',        // filled by ControlPanel
+        context : 1,
+        msFrom  : '',
         msTo    : '',
-        mode    : 'occ' as 'occ' | 'cmp',
+        mode    : 'cmp' as  'cmp' | 'occ',
 
         /* result data */
         hits    : [] as Occurrence[],
