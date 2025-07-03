@@ -1,7 +1,7 @@
 name: Deploy static content to Pages
 on:
   push:
-    branches: [master]
+    branches: [ master ]
   workflow_dispatch:
 
 
@@ -45,9 +45,9 @@ jobs:
       - uses: actions/configure-pages@v5
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './dist'            # relative to working-dir
+          uses: actions/upload-pages-artifact@v3
+          with:
+            path: ./chantMIR/mir-choral/dist
 
       - name: Deploy to GitHub Pages
         id: deployment
