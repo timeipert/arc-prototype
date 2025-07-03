@@ -1,0 +1,28 @@
+{
+  "name": "mir-choral",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "prep:data": "npx tsx  tools/build-data.ts  public/dataset.csv  public/data",
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "csv-parse": "^5.6.0",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.17",
+    "zstd-codec": "^0.1.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/tsconfig": "^0.7.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.3",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.0",
+    "vue-tsc": "^2.2.10"
+  }
+}
