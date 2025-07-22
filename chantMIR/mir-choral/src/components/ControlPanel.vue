@@ -78,11 +78,14 @@ form {
 background: white;
   font-size: 1em;
   margin: 0.6em 0.3em;
-color: black;}
+color: black !important;
+
+}
 
 .label {
-  font-size: 0.8em;
+  font-size: 0.9em;
   margin-right: 0.5em;
+  color: darkslategrey;
 }
 input.volpiano {
   width: 200px;

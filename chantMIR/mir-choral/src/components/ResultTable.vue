@@ -68,12 +68,14 @@ const emit = defineEmits<{ select:[h:Occurrence] }>();
 <template>
   <!-- meta paragraph unchanged -->
   <div class="line"></div>
-  <table v-if="!store.running" class="w-full text-sm border-collapse table-fixed results">
+  <div class="infofield">found {{store.hits.length}} chants</div>
+  <table v-if="!store.running && store.hits.length" class="w-full text-sm border-collapse table-fixed results">
     <thead>
     <tr><th>Initial Text</th>
-      <th>Syllable Position</th>
+
       <th>Manuscript #1</th>
       <th>Manuscript #2</th>
+      <th>Syllable Position</th>
     </tr>
     </thead>
     <tbody>
@@ -85,7 +87,6 @@ const emit = defineEmits<{ select:[h:Occurrence] }>();
       <!-- meta columns -->
 
       <td class="border p-1 truncate">{{ chants[h.uuid]?.incipit }}</td>
-      <td class="border p-1 text-right">{{ h.start }}–{{ h.end-1 }}</td>
 
       <!-- FROM snippet -->
       <td class="border p-0">
@@ -107,6 +108,8 @@ const emit = defineEmits<{ select:[h:Occurrence] }>();
           <span v-else class="italic text-gray-500">—</span>
         </div>
       </td>
+
+      <td class="border p-0 text-right" style="font-size: 0.6em;">{{ h.start }}–{{ h.end-1 }}</td>
     </tr>
     </tbody>
   </table>
@@ -114,6 +117,7 @@ const emit = defineEmits<{ select:[h:Occurrence] }>();
 <style scoped>
 table.results {
   margin-top: 3em;
+
 }
 table.results td {
   padding: 0 3em;
@@ -126,5 +130,9 @@ table.results th {
   width: 100%;
   border-top: 1px solid #ccc;
   margin-top: 1em;
+}
+.infofield {
+  padding-top: 1em;
+  font-size: 0.9em;
 }
 </style>
